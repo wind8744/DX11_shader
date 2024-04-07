@@ -8,15 +8,15 @@ cbuffer MatrixBuffer
 struct VSInput
 {
     float4 position : POSITION;
-    //float4 color : COLOR;
     float2 uv : TEXCOORD0;
+	float3 normal : NORMAL;
 };
 
 struct VSOutput
 {
     float4 position : SV_POSITION;
-    //float4 color : COLOR;
     float2 uv : TEXCOORD0;
+	float3 normal : NORMAL;
 };
 
 VSOutput main(VSInput vsInput)
@@ -31,6 +31,11 @@ VSOutput main(VSInput vsInput)
     
     // 텍스쳐 좌표 복사본을 갖고온다
     vsOutput.uv = vsInput.uv;
+    
+    // 월드좌표에 대해서 법선 벡터 계산
+	vsOutput.normal = mul(vsInput.normal, (float3x3)worldMatrix);
+    // 법선 벡터 정규화
+	vsOutput.normal = normalize(vsOutput.normal);
 
     return vsOutput; // 픽셀로
 }

@@ -60,6 +60,12 @@
     <ClInclude Include="Textureclass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Lightshaderclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Lightclass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Systemclass.cpp">
@@ -92,6 +98,12 @@
     <ClCompile Include="Textureclass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Lightshaderclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Lightclass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DX11_shader.rc">
@@ -115,10 +127,10 @@
     <None Include="ps.hlsl">
       <Filter>shader</Filter>
     </None>
-    <None Include="texture_vs.hlsl">
+    <None Include="vertexShader.hlsl">
       <Filter>shader</Filter>
     </None>
-    <None Include="texture_ps.hlsl">
+    <None Include="pixelShader.hlsl">
       <Filter>shader</Filter>
     </None>
   </ItemGroup>

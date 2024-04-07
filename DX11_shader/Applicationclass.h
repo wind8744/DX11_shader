@@ -20,8 +20,10 @@
 #include "D3dclass.h"
 #include "Cameraclass.h"
 #include "Modelclass.h"
-#include "Colorshaderclass.h"
-#include "Textureshaderclass.h"
+//#include "Colorshaderclass.h"
+//#include "Textureshaderclass.h"
+#include "Lightshaderclass.h"
+#include "Lightclass.h"
 
 /////////////
 // GLOBALS //
@@ -46,15 +48,17 @@ public:
 	bool Frame();
 
 private:
-	bool Render();
+	bool Render(float);
 
 private:
 	D3dclass* m_Direct3D;
 	Cameraclass* m_Camera;
 	Modelclass* m_Model;
-	Colorshaderclass* m_ColorShader;
-
-	Textureshaderclass* m_TextureShader;
+	//Colorshaderclass* m_ColorShader;
+	//Textureshaderclass* m_TextureShader;
+	
+	Lightshaderclass* m_LightShader;
+	Lightclass* m_Light;
 };
 
 #endif

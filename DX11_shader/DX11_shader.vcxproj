@@ -134,6 +134,8 @@
     <ClInclude Include="DX11_shader.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Inputclass.h" />
+    <ClInclude Include="Lightclass.h" />
+    <ClInclude Include="Lightshaderclass.h" />
     <ClInclude Include="Modelclass.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Systemclass.h" />
@@ -148,6 +150,8 @@
     <ClCompile Include="D3dclass.cpp" />
     <ClCompile Include="DX11_shader.cpp" />
     <ClCompile Include="Inputclass.cpp" />
+    <ClCompile Include="Lightclass.cpp" />
+    <ClCompile Include="Lightshaderclass.cpp" />
     <ClCompile Include="Modelclass.cpp" />
     <ClCompile Include="Systemclass.cpp" />
     <ClCompile Include="Textureclass.cpp" />
@@ -165,8 +169,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ps.hlsl" />
-    <None Include="texture_ps.hlsl" />
-    <None Include="texture_vs.hlsl" />
+    <None Include="pixelShader.hlsl" />
+    <None Include="vertexShader.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
