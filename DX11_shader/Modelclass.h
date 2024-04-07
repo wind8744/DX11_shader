@@ -12,7 +12,7 @@
 #include <d3d11.h>
 #include <directxmath.h>
 using namespace DirectX;
-
+#include "Textureclass.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: Modelclass
@@ -24,7 +24,7 @@ private:
 	struct VertexType
 	{
 		XMFLOAT3 position;
-		XMFLOAT4 color;
+		XMFLOAT2 texture;//XMFLOAT4 color;
 	};
 
 public:
@@ -32,21 +32,31 @@ public:
 	Modelclass(const Modelclass&);
 	~Modelclass();
 
-	bool Initialize(ID3D11Device*);
+	bool Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename);
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 
 	int GetIndexCount();
+
+	// 모델을 그리는 쉐이더에 자체 텍스처 리소스 전달
+	ID3D11ShaderResourceView* GetTexture();
 
 private:
 	bool InitializeBuffers(ID3D11Device*);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 
+	// for textrue
+	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, char*);
+	void ReleaseTexture();
+
 private:
 	// 인덱스 버퍼와 각 버퍼의 크기를 알 수 있는 두개의 정수가 사ㅛㅇ된다
 	ID3D11Buffer* m_vertexBuffer, * m_indexBuffer;
 	int m_vertexCount, m_indexCount;
+
+	// 3d모델의 텍스쳐 변수
+	Textureclass* m_Texture;
 };
 
 #endif

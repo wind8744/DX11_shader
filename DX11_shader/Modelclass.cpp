@@ -3,6 +3,8 @@ Modelclass::Modelclass()
 {
 	m_vertexBuffer = 0;
 	m_indexBuffer = 0;
+	m_Texture = nullptr;
+
 }
 Modelclass::Modelclass(const Modelclass& other)
 {
@@ -11,7 +13,7 @@ Modelclass::~Modelclass()
 {
 }
 
-bool Modelclass::Initialize(ID3D11Device* device)
+bool Modelclass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename)
 {
 	bool result;
 
@@ -23,15 +25,26 @@ bool Modelclass::Initialize(ID3D11Device* device)
 		return false;
 	}
 
+	// Load the texture for this model.
+	result = LoadTexture(device, deviceContext, textureFilename);
+	if (!result)
+	{
+		return false;
+	}
+
 	return true;
 }
 
 void Modelclass::Shutdown()
 {
-	// Shutdown the vertex and index buffers.
+	ReleaseTexture();
 	ShutdownBuffers();
-
 	return;
+}
+
+ID3D11ShaderResourceView* Modelclass::GetTexture()
+{
+	return m_Texture->GetTexture();
 }
 
 // Render는 ApplicationClass::Render 함수에서 호출됩니다. 
@@ -81,27 +94,34 @@ bool Modelclass::InitializeBuffers(ID3D11Device* device)
 
 	// 정점은 항상 시계방향으로 그린다. 반대로 그릴시 뒷면 컬링으로 삼각형이 그려지지 않는다.
 	// Load the vertex array with data.
+	//vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
+	//vertices[0].color = XMFLOAT4(1.0f, 0.5f, 0.0f, 1.f);
+	//vertices[1].position = XMFLOAT3(-1.0f, 1.0f, 0.0f);  // Top middle.
+	//vertices[1].color = XMFLOAT4(0.0f, 1.0f, 0.5f, 1.f);
+	//vertices[2].position = XMFLOAT3(1.0f, 1.0f, 0.0f);  // Bottom right.
+	//vertices[2].color = XMFLOAT4(0.5f, 0.0f, 1.0f, 1.0f);
+	//vertices[3].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
+	//vertices[3].color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
+
+	// 적용 uv tex
+	// Load the vertex array with data.
 	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
-	vertices[0].color = XMFLOAT4(1.0f, 0.5f, 0.0f, 1.f);
+	vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
 
-	vertices[1].position = XMFLOAT3(-1.0f, 1.0f, 0.0f);  // Top middle.
-	vertices[1].color = XMFLOAT4(0.0f, 1.0f, 0.5f, 1.f);
+	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
+	vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
 
-	vertices[2].position = XMFLOAT3(1.0f, 1.0f, 0.0f);  // Bottom right.
-	vertices[2].color = XMFLOAT4(0.5f, 0.0f, 1.0f, 1.0f);
-
-	vertices[3].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
-	vertices[3].color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
-
+	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
+	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
 
 	// Load the index array with data.
 	indices[0] = 0;  // Bottom left.
 	indices[1] = 1;  // Top middle.
 	indices[2] = 2;  // Bottom right.
 
-	indices[3] = 0;  // Bottom left.
-	indices[4] = 2;  // Top middle.
-	indices[5] = 3;  // Bottom right.
+	//indices[3] = 0;  // Bottom left.
+	//indices[4] = 2;  // Top middle.
+	//indices[5] = 3;  // Bottom right.
 
 	// Set up the description of the static vertex buffer.
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -198,6 +218,36 @@ void Modelclass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 
 	// Set the type of primitive that should be rendered from this vertex buffer, in this case triangles.
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	return;
+}
+
+bool Modelclass::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename)
+{
+	bool result;
+
+
+	// Create and initialize the texture object.
+	m_Texture = new Textureclass;
+
+	result = m_Texture->Initialize(device, deviceContext, filename);
+	if (!result)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+void Modelclass::ReleaseTexture()
+{
+	// Release the texture object.
+	if (m_Texture)
+	{
+		m_Texture->Shutdown();
+		delete m_Texture;
+		m_Texture = 0;
+	}
 
 	return;
 }

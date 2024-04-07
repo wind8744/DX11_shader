@@ -19,16 +19,16 @@ cbuffer MatrixBuffer
 struct VSInput
 {
     float4 position : POSITION;
-    float4 color : COLOR;
-    //float2 uv : TEXCOORD;
+    //float4 color : COLOR;
+    float2 uv : TEXCOORD;
 };
 
 // 픽셀쉐이더로 넘어가는거
 struct VSOutput
 {
     float4 position : SV_POSITION;
-    float4 color : COLOR;
-    //float2 uv : TEXCOORD;
+    //float4 color : COLOR;
+    float2 uv : TEXCOORD;
 };
 
 // 입력 정점의 위치를 가져와서 여기에 월드, 뷰, 투영 행렬을 곱합니다. 
@@ -38,7 +38,7 @@ struct VSOutput
 VSOutput main(VSInput vsInput)
 {
     VSOutput vsOutput;
-	//vsInput.position.w = 1.0f;
+	vsInput.position.w = 1.0f;
     
     // 월드, 뷰, 투영행렬에 대한 정점 위치 계산
     vsOutput.position = mul(vsInput.position, worldMatrix); // 정점을 월드로 옮김
@@ -46,8 +46,10 @@ VSOutput main(VSInput vsInput)
     vsOutput.position = mul(vsOutput.position, projectionMatrix); // 투영
     
     // 색 설정
-    vsOutput.color = vsInput.color;
-    //vsOutput.uv = vsInput.uv;
+    //vsOutput.color = vsInput.color;
+
+    // 색상이 아닌 텍스쳐 좌표 복사본을 갖고온다
+    vsOutput.uv = vsInput.uv;
 
     return vsOutput; // 픽셀로
 }

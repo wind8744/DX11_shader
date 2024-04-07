@@ -6,6 +6,7 @@ Applicationclass::Applicationclass()
 	m_Camera = nullptr;
 	m_Model = nullptr;
 	m_ColorShader = nullptr;
+	m_TextureShader = 0;
 }
 
 Applicationclass::Applicationclass(const Applicationclass& other)
@@ -18,6 +19,7 @@ Applicationclass::~Applicationclass()
 
 bool Applicationclass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
+	char textureFilename[128];
 	bool result;
 	// Create and initialize the Direct3D object.
 	m_Direct3D = new D3dclass;
@@ -36,34 +38,55 @@ bool Applicationclass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// 모델 객체를 생성하고 초기화합니다.
 	m_Model = new Modelclass;
 
-	result = m_Model->Initialize(m_Direct3D->GetDevice());
-	if(!result)
+	
+	strcpy_s(textureFilename, "../resource/stone01.tga");
+
+	result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), textureFilename);
+	if (!result)
 	{
 		MessageBox(hwnd, L"모델 개체를 초기화할 수 없습니다.", L"Error", MB_OK);
 		return false;
 	}
 
-	// 컬러 셰이더 객체를 생성하고 초기화합니다.
-	m_ColorShader = new Colorshaderclass;
+	//텍스쳐 쉐이더 객체 생성
+	m_TextureShader = new Textureshaderclass;
 
-	result = m_ColorShader->Initialize(m_Direct3D->GetDevice(), hwnd);
-	if(!result)
+	result = m_TextureShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	if (!result)
 	{
-		MessageBox(hwnd, L"색상 셰이더 개체를 초기화할 수 없습니다.", L"오류", MB_OK);
+		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
 		return false;
 	}
+
+	// 컬러 셰이더 객체를 생성하고 초기화합니다.
+	//m_ColorShader = new Colorshaderclass;
+
+	//result = m_ColorShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	//if(!result)
+	//{
+	//	MessageBox(hwnd, L"색상 셰이더 개체를 초기화할 수 없습니다.", L"오류", MB_OK);
+	//	return false;
+	//}
+
 	return true;
 }
 
 void Applicationclass::Shutdown()
 {
-	// Release the color shader object.
-	if (m_ColorShader)
+	// Release the texture shader object.
+	if (m_TextureShader)
 	{
-		m_ColorShader->Shutdown();
-		delete m_ColorShader;
-		m_ColorShader = 0;
+		m_TextureShader->Shutdown();
+		delete m_TextureShader;
+		m_TextureShader = 0;
 	}
+	//// Release the color shader object.
+	//if (m_ColorShader)
+	//{
+	//	m_ColorShader->Shutdown();
+	//	delete m_ColorShader;
+	//	m_ColorShader = 0;
+	//}
 
 	// Release the model object.
 	if (m_Model)
@@ -121,7 +144,13 @@ bool Applicationclass::Render()
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
 	// 3d 모델을 컬러쉐이더로 렌더링
-	result = m_ColorShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
+	//result = m_ColorShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
+	//if (!result)
+	//{
+	//	return false;
+	//}
+	
+	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
 	if (!result)
 	{
 		return false;

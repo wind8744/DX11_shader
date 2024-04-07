@@ -138,6 +138,8 @@
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Systemclass.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Textureclass.h" />
+    <ClInclude Include="Textureshaderclass.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Applicationclass.cpp" />
@@ -148,6 +150,8 @@
     <ClCompile Include="Inputclass.cpp" />
     <ClCompile Include="Modelclass.cpp" />
     <ClCompile Include="Systemclass.cpp" />
+    <ClCompile Include="Textureclass.cpp" />
+    <ClCompile Include="Textureshaderclass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DX11_shader.rc" />
@@ -161,6 +165,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ps.hlsl" />
+    <None Include="texture_ps.hlsl" />
+    <None Include="texture_vs.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
