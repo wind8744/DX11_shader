@@ -22,6 +22,7 @@ Applicationclass::~Applicationclass()
 bool Applicationclass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	char textureFilename[128];
+	char modelFilename[129];
 	bool result;
 	// Create and initialize the Direct3D object.
 	m_Direct3D = new D3dclass;
@@ -40,10 +41,13 @@ bool Applicationclass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// 모델 객체를 생성하고 초기화합니다.
 	m_Model = new Modelclass;
 
-	
+	//strcpy_s(modelFilename, "../resource/tree.obj");
+	strcpy_s(modelFilename, "../resource/cube.txt");
 	strcpy_s(textureFilename, "../resource/stone01.tga");
 
-	result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), textureFilename);
+	result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext()
+		,modelFilename, textureFilename);
+
 	if (!result)
 	{
 		MessageBox(hwnd, L"모델 개체를 초기화할 수 없습니다.", L"Error", MB_OK);

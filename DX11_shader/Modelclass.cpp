@@ -4,7 +4,7 @@ Modelclass::Modelclass()
 	m_vertexBuffer = 0;
 	m_indexBuffer = 0;
 	m_Texture = nullptr;
-
+	m_model = nullptr;
 }
 Modelclass::Modelclass(const Modelclass& other)
 {
@@ -13,10 +13,18 @@ Modelclass::~Modelclass()
 {
 }
 
-bool Modelclass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename)
+// 모델을 파일 이름으로 사용
+// 초기화에서 로드 모델로 m model에 로드
+bool Modelclass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, char* textureFilename)
 {
 	bool result;
-
+	// Load in the model data.
+	//result = LoadObjModel(modelFilename);
+	result = LoadModel(modelFilename);
+	if (!result)
+	{
+		return false;
+	}
 
 	// Initialize the vertex and index buffers.
 	result = InitializeBuffers(device);
@@ -37,10 +45,18 @@ bool Modelclass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 
 void Modelclass::Shutdown()
 {
+	// Release the model texture.
 	ReleaseTexture();
+
+	// Shutdown the vertex and index buffers.
 	ShutdownBuffers();
+
+	// Release the model data.
+	ReleaseModel();
+
 	return;
 }
+
 
 ID3D11ShaderResourceView* Modelclass::GetTexture()
 {
@@ -65,18 +81,18 @@ int Modelclass::GetIndexCount()
 
 bool Modelclass::InitializeBuffers(ID3D11Device* device)
 {
+	// 정점과 인덱스 배열을 생성 !
 	VertexType* vertices;
 	unsigned long* indices;
 	D3D11_BUFFER_DESC vertexBufferDesc, indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData, indexData;
 	HRESULT result;
 
-	// 일단 수동으로 생성
+	// 일단 수동으로 생성 (삼각형, 사각형을 띄우기 위함)
 	// Set the number of vertices in the vertex array.
-	m_vertexCount = 3;
-
-	// Set the number of indices in the index array.
-	m_indexCount = 3;
+	//m_vertexCount = 3;
+	//// Set the number of indices in the index array.
+	//m_indexCount = 3;
 
 	// Create the vertex array.
 	vertices = new VertexType[m_vertexCount];
@@ -104,22 +120,34 @@ bool Modelclass::InitializeBuffers(ID3D11Device* device)
 	//vertices[3].color = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
 
 	// 적용 uv tex
-	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
-	vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
-	vertices[0].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+	//vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);  // Bottom left.
+	//vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
+	//vertices[0].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
-	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
-	vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
-	vertices[1].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+	//vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);  // Top middle.
+	//vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
+	//vertices[1].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
-	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
-	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
-	vertices[2].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
+	//vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);  // Bottom right.
+	//vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
+	//vertices[2].normal = XMFLOAT3(0.0f, 0.0f, -1.0f);
 
-	// Load the index array with data.
-	indices[0] = 0;  // Bottom left.
-	indices[1] = 1;  // Top middle.
-	indices[2] = 2;  // Bottom right.
+	//// Load the index array with data.
+	//indices[0] = 0;  // Bottom left.
+	//indices[1] = 1;  // Top middle.
+	//indices[2] = 2;  // Bottom right.
+
+	// 받은 데이터를 정점 배열로 ,
+	// 인덱스도 마찬가지
+	for (int i = 0; i < m_vertexCount; i++)
+	{
+		vertices[i].position = XMFLOAT3(m_model[i].x, m_model[i].y, m_model[i].z);
+		vertices[i].texture = XMFLOAT2(m_model[i].tu, m_model[i].tv);
+		vertices[i].normal = XMFLOAT3(m_model[i].nx, m_model[i].ny, m_model[i].nz);
+
+		indices[i] = i;
+	}
+
 
 	// Set up the description of the static vertex buffer.
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -172,6 +200,193 @@ bool Modelclass::InitializeBuffers(ID3D11Device* device)
 	return true;
 }
 
+#include <string>
+#include <vector>
+#include <sstream>
+bool Modelclass::LoadObjModel(char* filename)
+{
+	ifstream* file = new ifstream(filename);
+	if (!file->is_open())
+	{
+		return false;
+	}
+
+	char str[256];
+	vector<string> tokens;
+	vector<vector<float>> vertices;
+	vector<vector<float>> normals;
+	vector<vector<float>> uvs;
+	vector<vector<vector<int>>> faces;
+	while (file->getline(str, 256))//!file->eof())
+	{
+		stringstream stream(str);
+		string ctn;
+		vector<string> contents;
+		tokens.push_back(str);
+
+		// 한 줄의 문자열을 공백 기준으로 모두 나눠서 contents에 저장.
+		while (getline(stream, ctn, ' '))
+		{
+			contents.push_back(ctn);
+		}
+
+		for (const auto& sp : contents)
+		{
+			if (sp == "v")
+			{
+				vector<float> vertex(3, 0);
+				vertex[0] = std::stof(contents[1]);
+				vertex[1] = std::stof(contents[2]);
+				vertex[2] = -std::stof(contents[3]);
+				vertices.push_back(vertex);
+			}
+			else if (sp == "vn")
+			{
+				vector<float> normal(3, 0);
+				normal[0] = std::stof(contents[1]);
+				normal[1] = std::stof(contents[2]);
+				normal[2] = -std::stof(contents[3]);
+				normals.push_back(normal);
+			}
+			else if (sp == "vt")
+			{
+				vector<float> uv(2, 0);
+				uv[0] = std::stof(contents[1]);
+				uv[1] = 1 - std::stof(contents[2]);
+				uvs.push_back(uv);
+			}
+			else if (sp == "f")
+			{
+				//int** face = new int* [3];
+				vector<vector<int>> face(3, vector<int>(3, 0));
+				for (int i = 0; i < 3; i++)
+				{
+					//face[i] = new int[3];
+					std::stringstream ss(contents[i + 1]);
+					std::string val;
+					int cnt = 0;
+					while (std::getline(ss, val, '/'))
+					{
+						if (val.empty()) val = '0';
+						face[i][cnt] = std::stoi(val) - 1;
+						cnt++;
+					}
+				}
+				faces.push_back(face);
+			}
+
+		}
+	}
+
+	//struct VertexInput
+	//{
+	//	XMFLOAT3 Position;
+	//	XMFLOAT3 Normal;
+	//	XMFLOAT3 Tangent;
+	//};
+
+	//struct ModelType
+	//{
+	//	float x, y, z;
+	//	float tu, tv;
+	//	float nx, ny, nz;
+	//};
+
+	int i = 0;
+	m_vertexCount = 312;
+	m_indexCount = 312;
+	m_model = new ModelType[m_vertexCount*3];
+	for (const auto& f : faces)
+	{
+		ModelType NewModel;
+
+		vector<int> info = f[0];
+		m_model[i].x = vertices[info[0]][0];
+		m_model[i].y = vertices[info[0]][1];
+		m_model[i].z = vertices[info[0]][2];
+
+		m_model[i].tu = uvs[info[1]][0];
+		m_model[i].tv = uvs[info[1]][1];
+
+		m_model[i].nx = normals[info[2]][0];
+		m_model[i].ny = normals[info[2]][1];
+		m_model[i].nz = normals[info[2]][2];
+	}
+
+
+	file->close();
+	delete file;
+	file = nullptr;
+
+	return true;
+}
+
+// 텍스트 파일의 모델 데이터를 읽어와 모델타입 구조체의 배열을 생성하여 데이터를 삽입
+bool Modelclass::LoadModel(char* filename)
+{
+	ifstream fin;
+	char input;
+	int i;
+
+
+	// Open the model file.
+	fin.open(filename);
+
+	// If it could not open the file then exit.
+	if (fin.fail())
+	{
+		return false;
+	}
+
+	// Read up to the value of vertex count.
+	fin.get(input);
+	while (input != ':')
+	{
+		fin.get(input);
+	}
+
+	// Read in the vertex count.
+	fin >> m_vertexCount;
+
+	// Set the number of indices to be the same as the vertex count.
+	m_indexCount = m_vertexCount;
+
+	// Create the model using the vertex count that was read in.
+	m_model = new ModelType[m_vertexCount];
+
+	// Read up to the beginning of the data.
+	fin.get(input);
+	while (input != ':')
+	{
+		fin.get(input);
+	}
+	fin.get(input);
+	fin.get(input);
+
+	// Read in the vertex data.
+	for (i = 0; i < m_vertexCount; i++)
+	{
+		fin >> m_model[i].x >> m_model[i].y >> m_model[i].z;
+		fin >> m_model[i].tu >> m_model[i].tv;
+		fin >> m_model[i].nx >> m_model[i].ny >> m_model[i].nz;
+	}
+
+	// Close the model file.
+	fin.close();
+
+	return true;
+}
+
+void Modelclass::ReleaseModel()
+{
+	if (m_model)
+	{
+		delete[] m_model;
+		m_model = 0;
+	}
+
+	return;
+}
 
 void Modelclass::ShutdownBuffers()
 {

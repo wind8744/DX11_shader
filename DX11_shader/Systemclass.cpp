@@ -178,14 +178,14 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	m_applicationName = L"Engine";
 
 	// Setup the windows class with default settings.
-	wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+	wc.style = CS_CLASSDC;// CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 	wc.lpfnWndProc = WndProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = m_hinstance;
 	wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
 	wc.hIconSm = wc.hIcon;
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hCursor = NULL;//LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = m_applicationName;
@@ -197,6 +197,7 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	// Determine the resolution of the clients desktop screen.
 	screenWidth = GetSystemMetrics(SM_CXSCREEN);
 	screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
 
 	// Setup the screen settings depending on whether it is running in full screen or in windowed mode.
 	if (FULL_SCREEN)
@@ -227,9 +228,23 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	}
 
 	// Create the window with the screen settings and get the handle to it.
-	m_hwnd = CreateWindowEx(WS_EX_APPWINDOW, m_applicationName, m_applicationName,
-		WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
-		posX, posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);
+	m_hwnd = CreateWindow(
+		wc.lpszClassName,
+		L"DX11_Shader",
+		WS_OVERLAPPEDWINDOW,
+		posX, // 윈도우 좌측 상단의 x 좌표
+		posY, // 윈도우 좌측 상단의 y 좌표
+		screenWidth, // 윈도우 가로 방향 해상도
+		screenHeight, // 윈도우 세로 방향 해상도
+		NULL,
+		NULL,
+		wc.hInstance,
+		NULL);
+
+
+	//m_hwnd = CreateWindowEx(WS_EX_APPWINDOW, m_applicationName, m_applicationName,
+	//	WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
+	//	posX, posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);
 
 	// Bring the window up on the screen and set it as main focus.
 	ShowWindow(m_hwnd, SW_SHOW);
@@ -237,7 +252,7 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	SetFocus(m_hwnd);
 
 	// Hide the mouse cursor.
-	ShowCursor(false);
+	ShowCursor(true);
 
 	return;
 }

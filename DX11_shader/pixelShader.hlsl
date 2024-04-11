@@ -37,5 +37,5 @@ float4 main(VSOutput vsOutput) : SV_TARGET
 	color = saturate(diffuseColor * lightIntensity);
 	//color = color * Texcolor; // 원본 텍스쳐와 곱
 	
-	return color; //baseColorTexture.Sample(baseColorSampler, vsOutput.uv);
+    return color; //baseColorTexture.Sample(baseColorSampler, vsOutput.uv) * color;
 }

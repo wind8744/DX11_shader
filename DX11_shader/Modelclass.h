@@ -11,8 +11,11 @@
 //////////////
 #include <d3d11.h>
 #include <directxmath.h>
+#include <fstream>
 using namespace DirectX;
+using namespace std;
 #include "Textureclass.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: Modelclass
@@ -28,12 +31,21 @@ private:
 		XMFLOAT3 normal;
 	};
 
+	// 3d모델을 나타네는 구조
+	struct ModelType
+	{
+		float x, y, z;
+		float tu, tv;
+		float nx, ny, nz;
+	};
+
 public:
 	Modelclass();
 	Modelclass(const Modelclass&);
 	~Modelclass();
 
-	bool Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename);
+	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, char*, char*);
+	//bool Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename);
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 
@@ -51,6 +63,12 @@ private:
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, char*);
 	void ReleaseTexture();
 
+	// for 3dmodel
+	bool LoadModel(char*);
+	bool LoadObjModel(char* filename);
+
+	void ReleaseModel();
+
 private:
 	// 인덱스 버퍼와 각 버퍼의 크기를 알 수 있는 두개의 정수가 사ㅛㅇ된다
 	ID3D11Buffer* m_vertexBuffer, * m_indexBuffer;
@@ -58,6 +76,7 @@ private:
 
 	// 3d모델의 텍스쳐 변수
 	Textureclass* m_Texture;
+	ModelType* m_model;
 };
 
 #endif
