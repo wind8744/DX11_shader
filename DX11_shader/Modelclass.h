@@ -12,9 +12,12 @@
 #include <d3d11.h>
 #include <directxmath.h>
 #include <fstream>
+#include <string>
+#include <vector>
+#include <sstream>
+#include "Textureclass.h"
 using namespace DirectX;
 using namespace std;
-#include "Textureclass.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,6 +57,8 @@ public:
 	// 모델을 그리는 쉐이더에 자체 텍스처 리소스 전달
 	ID3D11ShaderResourceView* GetTexture();
 
+	static bool ReadObjModel(char* filename);
+
 private:
 	bool InitializeBuffers(ID3D11Device*);
 	void ShutdownBuffers();
@@ -65,8 +70,6 @@ private:
 
 	// for 3dmodel
 	bool LoadModel(char*);
-	bool LoadObjModel(char* filename);
-
 	void ReleaseModel();
 
 private:

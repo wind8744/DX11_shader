@@ -1,4 +1,5 @@
 #include "Applicationclass.h"
+#include "Inputclass.h"
 
 Applicationclass::Applicationclass()
 {
@@ -36,17 +37,19 @@ bool Applicationclass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	// 카메라 객체를 생성합니다.
 	m_Camera = new  Cameraclass;
 	// 카메라의 초기 위치를 설정합니다.
-	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);
+	m_Camera->SetPosition(0.0f, 10.0f, -50.0f);
 
 	// 모델 객체를 생성하고 초기화합니다.
 	m_Model = new Modelclass;
 
-	//strcpy_s(modelFilename, "../resource/tree.obj");
-	strcpy_s(modelFilename, "../resource/cube.txt");
-	strcpy_s(textureFilename, "../resource/stone01.tga");
+	strcpy_s(modelFilename, "../resource/Car.obj");
+	auto ret = Modelclass::ReadObjModel(modelFilename);
+	//m_Model->LoadObjModel(modelFilename); // make obj to txt
 
-	result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext()
-		,modelFilename, textureFilename);
+	//strcpy_s(modelFilename, "../resource/objTest.txt"); //strcpy_s(modelFilename, "../resource/cube.txt");
+	strcpy_s(textureFilename, "../resource/stone01.tga");
+	//result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext()
+	//	,modelFilename, textureFilename);
 
 	if (!result)
 	{
@@ -124,6 +127,35 @@ void Applicationclass::Shutdown()
 		m_Direct3D = 0;
 	}
 	return;
+}
+
+void Applicationclass::Input()
+{
+	auto Pos = m_Camera->GetPosition();
+	float MoveSpeed = 0.1f;
+	float fDT = 1;
+	if (KEY_CHECK(VK_UP))
+	{
+		Pos.y += MoveSpeed * fDT;
+	}
+	if (KEY_CHECK(VK_DOWN))
+	{
+		Pos.y -= MoveSpeed * fDT;
+	}
+	if (KEY_CHECK(VK_LEFT))
+	{
+		Pos.x -= MoveSpeed * fDT;
+	}
+	if (KEY_CHECK(VK_RIGHT))
+	{
+		Pos.x += MoveSpeed * fDT;
+	}
+	if (KEY_CHECK(VK_SPACE))
+	{
+		Pos.z -= MoveSpeed * fDT;
+	}
+
+	m_Camera->SetPosition(Pos.x,Pos.y,Pos.z);
 }
 
 bool Applicationclass::Frame()

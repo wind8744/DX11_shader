@@ -26,6 +26,7 @@
 //////////////
 #include <d3d11.h>
 #include <directxmath.h>
+#include "Define.h"
 using namespace DirectX;
 
 

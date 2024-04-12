@@ -3,7 +3,7 @@
 
 SystemClass::SystemClass()
 {
-	m_Input = nullptr;
+	//m_Input = nullptr;
 	m_Application = nullptr;
 }
 
@@ -28,8 +28,11 @@ bool SystemClass::Initialize()
 	InitializeWindows(screenWidth, screenHeight);
 
 	// Create and initialize the input object.  This object will be used to handle reading the keyboard input from the user.
-	m_Input = new Inputclass;
-	m_Input->Initialize();
+	//m_Input = new Inputclass;
+	//m_Input->Initialize();
+	//싱글톤 변경
+	Inputclass::GetInst()->Initialize();
+	
 
 	// Create and initialize the application class object.  This object will handle rendering all the graphics for this application.
 	m_Application = new Applicationclass;
@@ -55,11 +58,12 @@ void SystemClass::Shutdown()
 	}
 
 	// Release the input object.
-	if (m_Input)
-	{
-		delete m_Input;
-		m_Input = nullptr;
-	}
+	//if (m_Input)
+	//{
+	//	delete m_Input;
+	//	m_Input = nullptr;
+	//}
+	Inputclass::GetInst()->Destroy();
 
 	// Shutdown the window.
 	ShutdownWindows();
@@ -92,8 +96,21 @@ void SystemClass::Run()
 		{
 			done = true;
 		}
+		else if (KEY_CHECK(VK_ESCAPE))
+		{
+			done = true;
+		}
 		else
 		{
+			// #############
+			// ### INPUT ###
+			// #############
+			Input();
+
+
+			// #############
+			// ### Render ###
+			// #############
 			// Otherwise do the frame processing.
 			result = Frame();
 			if (!result)
@@ -107,17 +124,17 @@ void SystemClass::Run()
 	return;
 }
 
+bool SystemClass::Input()
+{
+	m_Application->Input();
+
+	return true;
+}
+
 // 입력과 그래픽 처리
 bool SystemClass::Frame()
 {
 	bool result;
-
-
-	// Check if the user pressed escape and wants to exit the application.
-	if (m_Input->IsKeyDown(VK_ESCAPE))
-	{
-		return false;
-	}
 
 	// Do the frame processing for the application class object.
 	result = m_Application->Frame();
@@ -140,7 +157,9 @@ LRESULT CALLBACK SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam
 	case WM_KEYDOWN:
 	{
 		// If a key is pressed send it to the input object so it can record that state.
-		m_Input->KeyDown((unsigned int)wparam);
+		//m_Input->KeyDown((unsigned int)wparam);
+		Inputclass::GetInst()->KeyDown((unsigned int)wparam);
+
 		return 0;
 	}
 
@@ -148,7 +167,9 @@ LRESULT CALLBACK SystemClass::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam
 	case WM_KEYUP:
 	{
 		// If a key is released then send it to the input object so it can unset the state for that key.
-		m_Input->KeyUp((unsigned int)wparam);
+		//m_Input->KeyUp((unsigned int)wparam);
+		Inputclass::GetInst()->KeyUp((unsigned int)wparam);
+
 		return 0;
 	}
 
@@ -228,23 +249,23 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	}
 
 	// Create the window with the screen settings and get the handle to it.
-	m_hwnd = CreateWindow(
-		wc.lpszClassName,
-		L"DX11_Shader",
-		WS_OVERLAPPEDWINDOW,
-		posX, // 윈도우 좌측 상단의 x 좌표
-		posY, // 윈도우 좌측 상단의 y 좌표
-		screenWidth, // 윈도우 가로 방향 해상도
-		screenHeight, // 윈도우 세로 방향 해상도
-		NULL,
-		NULL,
-		wc.hInstance,
-		NULL);
+	//m_hwnd = CreateWindow(
+	//	wc.lpszClassName,
+	//	L"DX11_Shader",
+	//	WS_OVERLAPPEDWINDOW,
+	//	posX, // 윈도우 좌측 상단의 x 좌표
+	//	posY, // 윈도우 좌측 상단의 y 좌표
+	//	screenWidth, // 윈도우 가로 방향 해상도
+	//	screenHeight, // 윈도우 세로 방향 해상도
+	//	NULL,
+	//	NULL,
+	//	wc.hInstance,
+	//	NULL);
 
 
-	//m_hwnd = CreateWindowEx(WS_EX_APPWINDOW, m_applicationName, m_applicationName,
-	//	WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
-	//	posX, posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);
+	m_hwnd = CreateWindowEx(WS_EX_APPWINDOW, m_applicationName, m_applicationName,
+		WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
+		posX, posY, screenWidth, screenHeight, NULL, NULL, m_hinstance, NULL);
 
 	// Bring the window up on the screen and set it as main focus.
 	ShowWindow(m_hwnd, SW_SHOW);

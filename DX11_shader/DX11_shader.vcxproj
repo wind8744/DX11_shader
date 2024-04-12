@@ -131,6 +131,7 @@
     <ClInclude Include="Cameraclass.h" />
     <ClInclude Include="Colorshaderclass.h" />
     <ClInclude Include="D3dclass.h" />
+    <ClInclude Include="Define.h" />
     <ClInclude Include="DX11_shader.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Inputclass.h" />
@@ -138,6 +139,7 @@
     <ClInclude Include="Lightshaderclass.h" />
     <ClInclude Include="Modelclass.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="Singleton.h" />
     <ClInclude Include="Systemclass.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Textureclass.h" />
@@ -153,6 +155,7 @@
     <ClCompile Include="Lightclass.cpp" />
     <ClCompile Include="Lightshaderclass.cpp" />
     <ClCompile Include="Modelclass.cpp" />
+    <ClCompile Include="Singleton.cpp" />
     <ClCompile Include="Systemclass.cpp" />
     <ClCompile Include="Textureclass.cpp" />
     <ClCompile Include="Textureshaderclass.cpp" />

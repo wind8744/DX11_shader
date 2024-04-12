@@ -1,4 +1,35 @@
 #include "Modelclass.h"
+
+struct VertexType
+{
+	float x, y, z;
+};
+
+struct FaceType
+{
+	int vIndex1, vIndex2, vIndex3;
+	int tIndex1, tIndex2, tIndex3;
+	int nIndex1, nIndex2, nIndex3;
+};
+
+bool ReadFileCounts(char*, int&, int&, int&, int&);
+bool LoadDataStructures(char*, int, int, int, int);
+bool Modelclass::ReadObjModel(char* filename)
+{
+	bool result;
+	int vertexCount, textureCount, normalCount, faceCount;
+
+	// 버텍스 개수를 읽어옴
+	result = ReadFileCounts(filename, vertexCount, textureCount, normalCount, faceCount);
+	if (!result) { return false; }
+
+	// 읽어온 값으로 데이터 생성
+	result = LoadDataStructures(filename, vertexCount, textureCount, normalCount, faceCount);
+	if (!result){ return false; }
+
+	return true;
+}
+
 Modelclass::Modelclass()
 {
 	m_vertexBuffer = 0;
@@ -18,8 +49,8 @@ Modelclass::~Modelclass()
 bool Modelclass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, char* textureFilename)
 {
 	bool result;
+
 	// Load in the model data.
-	//result = LoadObjModel(modelFilename);
 	result = LoadModel(modelFilename);
 	if (!result)
 	{
@@ -200,126 +231,6 @@ bool Modelclass::InitializeBuffers(ID3D11Device* device)
 	return true;
 }
 
-#include <string>
-#include <vector>
-#include <sstream>
-bool Modelclass::LoadObjModel(char* filename)
-{
-	ifstream* file = new ifstream(filename);
-	if (!file->is_open())
-	{
-		return false;
-	}
-
-	char str[256];
-	vector<string> tokens;
-	vector<vector<float>> vertices;
-	vector<vector<float>> normals;
-	vector<vector<float>> uvs;
-	vector<vector<vector<int>>> faces;
-	while (file->getline(str, 256))//!file->eof())
-	{
-		stringstream stream(str);
-		string ctn;
-		vector<string> contents;
-		tokens.push_back(str);
-
-		// 한 줄의 문자열을 공백 기준으로 모두 나눠서 contents에 저장.
-		while (getline(stream, ctn, ' '))
-		{
-			contents.push_back(ctn);
-		}
-
-		for (const auto& sp : contents)
-		{
-			if (sp == "v")
-			{
-				vector<float> vertex(3, 0);
-				vertex[0] = std::stof(contents[1]);
-				vertex[1] = std::stof(contents[2]);
-				vertex[2] = -std::stof(contents[3]);
-				vertices.push_back(vertex);
-			}
-			else if (sp == "vn")
-			{
-				vector<float> normal(3, 0);
-				normal[0] = std::stof(contents[1]);
-				normal[1] = std::stof(contents[2]);
-				normal[2] = -std::stof(contents[3]);
-				normals.push_back(normal);
-			}
-			else if (sp == "vt")
-			{
-				vector<float> uv(2, 0);
-				uv[0] = std::stof(contents[1]);
-				uv[1] = 1 - std::stof(contents[2]);
-				uvs.push_back(uv);
-			}
-			else if (sp == "f")
-			{
-				//int** face = new int* [3];
-				vector<vector<int>> face(3, vector<int>(3, 0));
-				for (int i = 0; i < 3; i++)
-				{
-					//face[i] = new int[3];
-					std::stringstream ss(contents[i + 1]);
-					std::string val;
-					int cnt = 0;
-					while (std::getline(ss, val, '/'))
-					{
-						if (val.empty()) val = '0';
-						face[i][cnt] = std::stoi(val) - 1;
-						cnt++;
-					}
-				}
-				faces.push_back(face);
-			}
-
-		}
-	}
-
-	//struct VertexInput
-	//{
-	//	XMFLOAT3 Position;
-	//	XMFLOAT3 Normal;
-	//	XMFLOAT3 Tangent;
-	//};
-
-	//struct ModelType
-	//{
-	//	float x, y, z;
-	//	float tu, tv;
-	//	float nx, ny, nz;
-	//};
-
-	int i = 0;
-	m_vertexCount = 312;
-	m_indexCount = 312;
-	m_model = new ModelType[m_vertexCount*3];
-	for (const auto& f : faces)
-	{
-		ModelType NewModel;
-
-		vector<int> info = f[0];
-		m_model[i].x = vertices[info[0]][0];
-		m_model[i].y = vertices[info[0]][1];
-		m_model[i].z = vertices[info[0]][2];
-
-		m_model[i].tu = uvs[info[1]][0];
-		m_model[i].tv = uvs[info[1]][1];
-
-		m_model[i].nx = normals[info[2]][0];
-		m_model[i].ny = normals[info[2]][1];
-		m_model[i].nz = normals[info[2]][2];
-	}
-
-
-	file->close();
-	delete file;
-	file = nullptr;
-
-	return true;
-}
 
 // 텍스트 파일의 모델 데이터를 읽어와 모델타입 구조체의 배열을 생성하여 데이터를 삽입
 bool Modelclass::LoadModel(char* filename)
@@ -463,4 +374,366 @@ void Modelclass::ReleaseTexture()
 	}
 
 	return;
+}
+
+bool ReadFileCounts(char* filename, int& vertexCount, int& textureCount, int& normalCount, int& faceCount)
+{
+	ifstream fin;
+	char input;
+
+	// Initialize the counts.
+	vertexCount = 0;
+	textureCount = 0;
+	normalCount = 0;
+	faceCount = 0;
+
+	// Open the file.
+	fin.open(filename);
+
+	// Check if it was successful in opening the file.
+	if (fin.fail() == true)
+	{
+		return false;
+	}
+
+	// Read from the file and continue to read until the end of the file is reached.
+	fin.get(input);
+	while (!fin.eof())
+	{
+		// If the line starts with 'v' then count either the vertex, the texture coordinates, or the normal vector.
+		if (input == 'v')
+		{
+			fin.get(input);
+			if (input == ' ') { vertexCount++; }
+			if (input == 't') { textureCount++; }
+			if (input == 'n') { normalCount++; }
+		}
+
+		// If the line starts with 'f' then increment the face count.
+		if (input == 'f')
+		{
+			fin.get(input);
+			if (input == ' ') { faceCount++; }
+		}
+
+		// Otherwise read in the remainder of the line.
+		while (input != '\n')
+		{
+			fin.get(input);
+		}
+
+		// Start reading the beginning of the next line.
+		fin.get(input);
+	}
+
+	// Close the file.
+	fin.close();
+
+	return true;
+}
+
+
+bool LoadDataStructures(char* filename, int vertexCount, int textureCount, int normalCount, int faceCount)
+{
+	VertexType* vertices, * texcoords, * normals;
+	FaceType* faces;
+	ifstream fin;
+	int vertexIndex, texcoordIndex, normalIndex, faceIndex, vIndex, tIndex, nIndex;
+	char input, input2;
+	ofstream fout;
+
+	// Initialize the four data structures.
+	vertices = new VertexType[vertexCount];
+	if (!vertices)
+	{
+		return false;
+	}
+
+	texcoords = new VertexType[textureCount];
+	if (!texcoords)
+	{
+		return false;
+	}
+
+	normals = new VertexType[normalCount];
+	if (!normals)
+	{
+		return false;
+	}
+
+	faces = new FaceType[faceCount];
+	if (!faces)
+	{
+		return false;
+	}
+
+	// Initialize the indexes.
+	vertexIndex = 0;
+	texcoordIndex = 0;
+	normalIndex = 0;
+	faceIndex = 0;
+
+	// Open the file.
+	fin.open(filename);
+
+	// Check if it was successful in opening the file.
+	if (fin.fail() == true)
+	{
+		return false;
+	}
+
+	// Read in the vertices, texture coordinates, and normals into the data structures.
+	// Important: Also convert to left hand coordinate system since Maya uses right hand coordinate system.
+	fin.get(input);
+	while (!fin.eof())
+	{
+		if (input == 'v')
+		{
+			fin.get(input);
+
+			// Read in the vertices.
+			if (input == ' ')
+			{
+				fin >> vertices[vertexIndex].x >> vertices[vertexIndex].y >> vertices[vertexIndex].z;
+
+				// Invert the Z vertex to change to left hand system.
+				vertices[vertexIndex].z = vertices[vertexIndex].z * -1.0f;
+				vertexIndex++;
+			}
+
+			// Read in the texture uv coordinates.
+			if (input == 't')
+			{
+				fin >> texcoords[texcoordIndex].x >> texcoords[texcoordIndex].y;
+
+				// Invert the V texture coordinates to left hand system.
+				texcoords[texcoordIndex].y = 1.0f - texcoords[texcoordIndex].y;
+				texcoordIndex++;
+			}
+
+			// Read in the normals.
+			if (input == 'n')
+			{
+				fin >> normals[normalIndex].x >> normals[normalIndex].y >> normals[normalIndex].z;
+
+				// Invert the Z normal to change to left hand system.
+				normals[normalIndex].z = normals[normalIndex].z * -1.0f;
+				normalIndex++;
+			}
+		}
+
+		// Read in the faces.
+		if (input == 'f')
+		{
+			fin.get(input);
+			if (input == ' ')
+			{
+				// Read the face data in backwards to convert it to a left hand system from right hand system.
+				fin >> faces[faceIndex].vIndex3 >> input2 >> faces[faceIndex].tIndex3 >> input2 >> faces[faceIndex].nIndex3
+					>> faces[faceIndex].vIndex2 >> input2 >> faces[faceIndex].tIndex2 >> input2 >> faces[faceIndex].nIndex2
+					>> faces[faceIndex].vIndex1 >> input2 >> faces[faceIndex].tIndex1 >> input2 >> faces[faceIndex].nIndex1;
+				faceIndex++;
+			}
+		}
+
+		// Read in the remainder of the line.
+		//while (input != '\n')
+		//{
+		//	fin.get(input);
+		//}
+
+		// Start reading the beginning of the next line.
+		fin.get(input);
+	}
+
+	// Close the file.
+	fin.close();
+
+	// Open the output file.
+	char OpenFilename[128];
+	strcpy_s(OpenFilename, "../resource/objTest.txt");
+
+	//OpenFilename
+	
+	fout.open(OpenFilename);
+	if (!fout.is_open())
+	{
+		int a = 1;
+		return false;
+	}
+
+	// Write out the file header that our model format uses.
+	fout << "Vertex Count: " << (faceCount * 3) << endl;
+	fout << endl;
+	fout << "Data:" << endl;
+	fout << endl;
+
+	// Now loop through all the faces and output the three vertices for each face.
+	for (int i = 0; i < faceIndex; i++)
+	{
+		vIndex = faces[i].vIndex1 - 1;
+		tIndex = faces[i].tIndex1 - 1;
+		nIndex = faces[i].nIndex1 - 1;
+
+		fout << vertices[vIndex].x << ' ' << vertices[vIndex].y << ' ' << vertices[vIndex].z << ' '
+			<< texcoords[tIndex].x << ' ' << texcoords[tIndex].y << ' '
+			<< normals[nIndex].x << ' ' << normals[nIndex].y << ' ' << normals[nIndex].z << endl;
+
+		vIndex = faces[i].vIndex2 - 1;
+		tIndex = faces[i].tIndex2 - 1;
+		nIndex = faces[i].nIndex2 - 1;
+
+		fout << vertices[vIndex].x << ' ' << vertices[vIndex].y << ' ' << vertices[vIndex].z << ' '
+			<< texcoords[tIndex].x << ' ' << texcoords[tIndex].y << ' '
+			<< normals[nIndex].x << ' ' << normals[nIndex].y << ' ' << normals[nIndex].z << endl;
+
+		vIndex = faces[i].vIndex3 - 1;
+		tIndex = faces[i].tIndex3 - 1;
+		nIndex = faces[i].nIndex3 - 1;
+
+		fout << vertices[vIndex].x << ' ' << vertices[vIndex].y << ' ' << vertices[vIndex].z << ' '
+			<< texcoords[tIndex].x << ' ' << texcoords[tIndex].y << ' '
+			<< normals[nIndex].x << ' ' << normals[nIndex].y << ' ' << normals[nIndex].z << endl;
+	}
+
+	// Close the output file.
+	fout.close();
+
+	// Release the four data structures.
+	if (vertices)
+	{
+		delete[] vertices;
+		vertices = 0;
+	}
+	if (texcoords)
+	{
+		delete[] texcoords;
+		texcoords = 0;
+	}
+	if (normals)
+	{
+		delete[] normals;
+		normals = 0;
+	}
+	if (faces)
+	{
+		delete[] faces;
+		faces = 0;
+	}
+	/*
+ifstream* file = new ifstream(filename);
+if (!file->is_open())
+{
+	return false;
+}
+
+char str[256];
+vector<string> tokens;
+vector<vector<float>> vertices;
+vector<vector<float>> normals;
+vector<vector<float>> uvs;
+vector<vector<vector<int>>> faces;
+while (file->getline(str, 256))//!file->eof())
+{
+	stringstream stream(str);
+	string ctn;
+	vector<string> contents;
+	tokens.push_back(str);
+
+	// 한 줄의 문자열을 공백 기준으로 모두 나눠서 contents에 저장.
+	while (getline(stream, ctn, ' '))
+	{
+		contents.push_back(ctn);
+	}
+
+	for (const auto& sp : contents)
+	{
+		if (sp == "v")
+		{
+			vector<float> vertex(3, 0);
+			vertex[0] = std::stof(contents[1]);
+			vertex[1] = std::stof(contents[2]);
+			vertex[2] = -std::stof(contents[3]);
+			vertices.push_back(vertex);
+		}
+		else if (sp == "vn")
+		{
+			vector<float> normal(3, 0);
+			normal[0] = std::stof(contents[1]);
+			normal[1] = std::stof(contents[2]);
+			normal[2] = -std::stof(contents[3]);
+			normals.push_back(normal);
+		}
+		else if (sp == "vt")
+		{
+			vector<float> uv(2, 0);
+			uv[0] = std::stof(contents[1]);
+			uv[1] = 1 - std::stof(contents[2]);
+			uvs.push_back(uv);
+		}
+		else if (sp == "f")
+		{
+			//int** face = new int* [3];
+			vector<vector<int>> face(3, vector<int>(3, 0));
+			for (int i = 0; i < 3; i++)
+			{
+				//face[i] = new int[3];
+				std::stringstream ss(contents[i + 1]);
+				std::string val;
+				int cnt = 0;
+				while (std::getline(ss, val, '/'))
+				{
+					if (val.empty()) val = '0';
+					face[i][cnt] = std::stoi(val) - 1;
+					cnt++;
+				}
+			}
+			faces.push_back(face);
+		}
+
+	}
+}
+
+//struct VertexInput
+//{
+//	XMFLOAT3 Position;
+//	XMFLOAT3 Normal;
+//	XMFLOAT3 Tangent;
+//};
+
+//struct ModelType
+//{
+//	float x, y, z;
+//	float tu, tv;
+//	float nx, ny, nz;
+//};
+
+int i = 0;
+m_vertexCount = 312;
+m_indexCount = 312;
+m_model = new ModelType[m_vertexCount * 3];
+for (const auto& f : faces)
+{
+	ModelType NewModel;
+
+	vector<int> info = f[0];
+	m_model[i].x = vertices[info[0]][0];
+	m_model[i].y = vertices[info[0]][1];
+	m_model[i].z = vertices[info[0]][2];
+
+	m_model[i].tu = uvs[info[1]][0];
+	m_model[i].tv = uvs[info[1]][1];
+
+	m_model[i].nx = normals[info[2]][0];
+	m_model[i].ny = normals[info[2]][1];
+	m_model[i].nz = normals[info[2]][2];
+}
+
+
+file->close();
+delete file;
+file = nullptr;
+*/
+
+	return true;
 }

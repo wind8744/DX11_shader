@@ -34,6 +34,7 @@ public:
 	LRESULT CALLBACK MessageHandler(HWND, UINT, WPARAM, LPARAM);
 
 private:
+	bool Input();
 	bool Frame();
 	void InitializeWindows(int&, int&);
 	void ShutdownWindows();
@@ -43,7 +44,7 @@ private:
 	HINSTANCE m_hinstance;
 	HWND m_hwnd;
 
-	Inputclass* m_Input;
+	//Inputclass* m_Input;
 	Applicationclass* m_Application;
 };
 
